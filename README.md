@@ -84,6 +84,7 @@ not meet its continuation criteria: calibrated probability RMSE was 0.2499,
 slightly worse than both constant baselines, and conjunction error was 0.2410.
 The measured setup is not yet a useful calibrated probability oracle.
 
+- [Bounded parameter sweep](docs/parameter-sweep-2026-09-24.md)
 - [First benchmark results](docs/benchmark-2026-09-24.md)
 - [GPU smoke test](docs/gpu-smoke-2026-09-24.md)
 - [Prospective experiment protocol](docs/experiment-protocol.md)

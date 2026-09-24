@@ -115,11 +115,11 @@ def measurements(rows, calibration=None, fitted_constant=None):
     return metrics
 
 
-def gates(metrics):
+def gates(metrics, raw_metrics):
     scores=metrics['eval']
     checks={k:scores[k] is not None and scores[k]['mean']<=limit for k,limit in LIMITS.items()}
     checks['beats_baselines']=all(scores['rmse']['mean']<x['rmse'] for x in metrics['baselines'].values())
-    checks['defined_bayes_paths']=scores['undefined_bayes_paths']==0
+    checks['defined_bayes_paths']=scores['undefined_bayes_paths']==0 and raw_metrics['eval']['undefined_bayes_paths']==0
     return checks
 
 
@@ -127,14 +127,15 @@ def analyze(rows,config):
     affine=fit(rows)
     temperature_only=fit(rows,biases=(0,))
     calibrated=measurements(rows,affine)
-    return dict(config=config,calibration=affine,raw=measurements(rows),
+    raw=measurements(rows)
+    return dict(config=config,calibration=affine,raw=raw,
                 temperature_only=dict(calibration=temperature_only,metrics=measurements(rows,temperature_only)),
-                calibrated=calibrated,gates=gates(calibrated))
+                calibrated=calibrated,gates=gates(calibrated,raw))
 
 
 def rank(result):
     metrics=result['calibrated']['eval']
-    if metrics['undefined_bayes_paths']:
+    if metrics['undefined_bayes_paths'] or result['raw']['eval']['undefined_bayes_paths']:
         return math.inf,math.inf
     ratios=[metrics[k]['mean']/limit for k,limit in LIMITS.items()]
     baseline=min(x['rmse'] for x in result['calibrated']['baselines'].values())
@@ -249,8 +250,9 @@ def main():
         run_benchmark(queries,oracle,path,dict(metadata,phase='fresh-evaluation',selection=selection))
         rows=load_rows(path)
         metrics=measurements(rows,best['calibration'])
-        checks=gates(metrics)
-        report=dict(selection=selection,raw=measurements(rows,fitted_constant=best['calibration']['fitted_constant']),calibrated=metrics,gates=checks,
+        raw=measurements(rows,fitted_constant=best['calibration']['fitted_constant'])
+        checks=gates(metrics,raw)
+        report=dict(selection=selection,raw=raw,calibrated=metrics,gates=checks,
                     decision='thresholds_met' if all(checks.values()) else 'thresholds_not_met',
                     total_queries=len(queries),screened_candidates=len(leaderboard),
                     completed_utc=datetime.now(timezone.utc).isoformat())

@@ -32,3 +32,11 @@ def test_holdout_is_fresh_reproducible_and_well_formed():
     assert len(a)==8
     assert len({tuple(c['counts']) for c in a})==8
     assert all(sum(c['counts'])==100 and min(c['counts'])>0 and c['counts'] not in existing for c in a)
+
+
+def test_undefined_raw_bayes_path_cannot_be_hidden_by_calibration():
+    values={k:{'mean':.01} for k in sweep.LIMITS}
+    values['undefined_bayes_paths']=0
+    calibrated={'eval':values,'baselines':{'constant':{'rmse':.2}}}
+    raw={'eval':dict(values,undefined_bayes_paths=1)}
+    assert not sweep.gates(calibrated,raw)['defined_bayes_paths']
