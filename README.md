@@ -22,19 +22,72 @@ direct and algebraic Bayesian updates, and sensitivity to irrelevant context.
 Defer memory/RAG, semantic extraction, hypothesis generation, belief graphs,
 coherence projection, decision procedures, hidden-state probes, and fine-tuning.
 
-## Status
+## Use
 
-The first GPU smoke test passed on an RTX 4050 Laptop GPU shared with the GUI.
-Qwen3-0.6B in BF16 ran through vLLM with a 512-token context and a 50% GPU
-memory budget. Total observed GPU usage peaked at 4,093 MiB, with 1,670 MiB
-reported free. Four requests returned finite raw TRUE/FALSE token scores.
-This establishes hardware fit and score extraction, not calibration or the
-full milestone implementation.
+Run commands from this repository's root. Python 3.12 or newer is required.
 
-- [GPU smoke test and reproduction instructions](docs/gpu-smoke-2026-09-24.md)
+For algebra, reports, and tests without a GPU:
+
+```bash
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python -e '.[test]'
+.venv/bin/python -m pytest
+.venv/bin/probabilistic-oracle validate
+```
+
+For the pinned Linux NVIDIA environment tested on the laptop:
+
+```bash
+uv venv --python 3.12 .venv
+uv pip sync --python .venv/bin/python requirements-smoke.lock
+uv pip install --python .venv/bin/python -e '.[test]'
+RUN_GPU_TESTS=1 .venv/bin/python -m pytest tests/integration -q
+.venv/bin/probabilistic-oracle run --output runs/first-benchmark
+.venv/bin/probabilistic-oracle report runs/first-benchmark
+```
+
+A run directory must be new. Interrupted runs are retained and rejected as
+incomplete by reporting; rerun in a new directory. Failed requests are recorded
+explicitly, and an incomplete report exits with status 2. Failing the research
+thresholds is a valid experimental result and exits with status 0. Reports include
+raw and calibrated metrics, baselines, uncertainty across cases, and fit provenance.
+
+`--verbalizers yes-no` or `--verbalizers a-b` selects an alternative pair for a
+separate run. The first benchmark protocol uses TRUE/FALSE only.
+
+The Python scoring API keeps inference observations separate from algebra:
+
+```python
+from probabilistic_oracle.algebra import bayes
+from probabilistic_oracle.oracle import ScoreRequest
+from probabilistic_oracle.backends.vllm import VllmOracle
+
+# Put GPU initialization under this guard: vLLM spawns a worker process.
+if __name__ == "__main__":
+    oracle = VllmOracle()
+    result = oracle.score(ScoreRequest(
+        context="A fair coin is tossed once.",
+        proposition="The coin lands heads.",
+    ))
+    print(result.score, result.raw_logprobs, result.candidate_mass)
+    print(bayes(0.2, 0.8, 0.1))  # 2/3; exact external probability operation
+```
+
+## Evidence and scope
+
+The initial GPU smoke test passed on an RTX 4050 Laptop GPU shared with the GUI.
+Qwen3-0.6B in BF16 ran through vLLM with a 512-token context and a 50% GPU memory
+budget. Total observed GPU usage peaked at 4,093 MiB, with 1,670 MiB reported free.
+The package implements the scoring API, algebra, finite-world cases, calibration,
+and reports. The experimental protocol defines provisional continuation criteria.
+
+- [GPU smoke test](docs/gpu-smoke-2026-09-24.md)
+- [Prospective experiment protocol](docs/experiment-protocol.md)
 - [Milestone design](docs/plans/2026-09-24-milestone-1-design.md)
 - [Implementation plan](docs/plans/2026-09-24-milestone-1.md)
 
 Development is local and tracked in Git. Model weights, caches, credentials, and
-run outputs stay outside version control. The smoke test pins its model revision
-and dependencies; benchmark acceptance thresholds remain to be selected.
+run outputs stay outside version control. Runs retain exact prompts and raw
+observations in `manifest.json` and `records.jsonl`; `report.json` is derived.
+Do not interpret binary scores as calibrated probabilities without supporting
+measurements, or treat consistency alone as evidence of accuracy.

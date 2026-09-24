@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "probabilistic-oracle"
+version = "0.1.0"
+description = "Experiments with frozen-model plausibility scores"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest==9.1.1"]
+gpu = ["vllm==0.11.2", "transformers==4.57.6"]
+
+[project.scripts]
+probabilistic-oracle = "probabilistic_oracle.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = ["gpu: requires explicit RUN_GPU_TESTS=1 and the pinned model"]

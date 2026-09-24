@@ -1,0 +1,30 @@
+[
+  {
+    "id": "world-whales",
+    "context": "Consider animal classification in biology.",
+    "paraphrase_context": "Use standard biological taxonomy.",
+    "proposition": "Whales are mammals.",
+    "negation": "Whales are not mammals."
+  },
+  {
+    "id": "world-sun",
+    "context": "Consider the Sun in our solar system.",
+    "paraphrase_context": "The subject is the central object of the solar system.",
+    "proposition": "The Sun is a star.",
+    "negation": "The Sun is not a star."
+  },
+  {
+    "id": "world-square",
+    "context": "Use Euclidean plane geometry.",
+    "paraphrase_context": "Consider shapes in an ordinary Euclidean plane.",
+    "proposition": "A square has four sides.",
+    "negation": "A square does not have four sides."
+  },
+  {
+    "id": "world-water",
+    "context": "Consider pure water at standard atmospheric pressure.",
+    "paraphrase_context": "The substance is pure water under one atmosphere of pressure.",
+    "proposition": "Water boils at approximately 100 degrees Celsius.",
+    "negation": "Water does not boil at approximately 100 degrees Celsius."
+  }
+]

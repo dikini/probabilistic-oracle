@@ -1,0 +1,122 @@
+[
+  {
+    "id": "calibration-01",
+    "split": "calibration",
+    "counts": [
+      16,
+      4,
+      8,
+      72
+    ]
+  },
+  {
+    "id": "calibration-02",
+    "split": "calibration",
+    "counts": [
+      35,
+      35,
+      15,
+      15
+    ]
+  },
+  {
+    "id": "calibration-03",
+    "split": "calibration",
+    "counts": [
+      5,
+      45,
+      40,
+      10
+    ]
+  },
+  {
+    "id": "calibration-04",
+    "split": "calibration",
+    "counts": [
+      60,
+      15,
+      5,
+      20
+    ]
+  },
+  {
+    "id": "eval-01",
+    "split": "eval",
+    "counts": [
+      8,
+      12,
+      24,
+      56
+    ]
+  },
+  {
+    "id": "eval-02",
+    "split": "eval",
+    "counts": [
+      18,
+      12,
+      7,
+      63
+    ]
+  },
+  {
+    "id": "eval-03",
+    "split": "eval",
+    "counts": [
+      32,
+      8,
+      12,
+      48
+    ]
+  },
+  {
+    "id": "eval-04",
+    "split": "eval",
+    "counts": [
+      10,
+      40,
+      30,
+      20
+    ]
+  },
+  {
+    "id": "eval-05",
+    "split": "eval",
+    "counts": [
+      42,
+      18,
+      8,
+      32
+    ]
+  },
+  {
+    "id": "eval-06",
+    "split": "eval",
+    "counts": [
+      28,
+      42,
+      18,
+      12
+    ]
+  },
+  {
+    "id": "eval-07",
+    "split": "eval",
+    "counts": [
+      64,
+      16,
+      4,
+      16
+    ]
+  },
+  {
+    "id": "eval-08",
+    "split": "eval",
+    "counts": [
+      45,
+      45,
+      2,
+      8
+    ]
+  }
+]
