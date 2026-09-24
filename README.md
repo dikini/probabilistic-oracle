@@ -79,8 +79,12 @@ The initial GPU smoke test passed on an RTX 4050 Laptop GPU shared with the GUI.
 Qwen3-0.6B in BF16 ran through vLLM with a 512-token context and a 50% GPU memory
 budget. Total observed GPU usage peaked at 4,093 MiB, with 1,670 MiB reported free.
 The package implements the scoring API, algebra, finite-world cases, calibration,
-and reports. The experimental protocol defines provisional continuation criteria.
+and reports. The first 240-request benchmark completed without failures but did
+not meet its continuation criteria: calibrated probability RMSE was 0.2499,
+slightly worse than both constant baselines, and conjunction error was 0.2410.
+The measured setup is not yet a useful calibrated probability oracle.
 
+- [First benchmark results](docs/benchmark-2026-09-24.md)
 - [GPU smoke test](docs/gpu-smoke-2026-09-24.md)
 - [Prospective experiment protocol](docs/experiment-protocol.md)
 - [Milestone design](docs/plans/2026-09-24-milestone-1-design.md)
