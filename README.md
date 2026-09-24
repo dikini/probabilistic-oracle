@@ -84,6 +84,7 @@ not meet its continuation criteria: calibrated probability RMSE was 0.2499,
 slightly worse than both constant baselines, and conjunction error was 0.2410.
 The measured setup is not yet a useful calibrated probability oracle.
 
+- [Three- and five-category truth-scale results](docs/categorical-readout-2026-09-24.md)
 - [Numerical versus binary readout comparison](docs/readout-comparison-2026-09-24.md)
 - [Bounded parameter sweep](docs/parameter-sweep-2026-09-24.md)
 - [First benchmark results](docs/benchmark-2026-09-24.md)
