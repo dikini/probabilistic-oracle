@@ -4,7 +4,7 @@
 
 The scope follows the user-approved first milestone in the conversation
 [Replicate Jev Probabilities](chatgpt-conversation://6aafd354-edf4-83ed-a3ea-bfd353e68703).
-This repository starts a separate project; it does not change Ash.
+
 Implementation details below are proposals, not established experimental facts.
 
 ## Question
