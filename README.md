@@ -24,12 +24,17 @@ coherence projection, decision procedures, hidden-state probes, and fine-tuning.
 
 ## Status
 
-Repository initialized with the agreed scope and a proposed implementation plan.
-There is no executable implementation or experimental result yet.
+The first GPU smoke test passed on an RTX 4050 Laptop GPU shared with the GUI.
+Qwen3-0.6B in BF16 ran through vLLM with a 512-token context and a 50% GPU
+memory budget. Total observed GPU usage peaked at 4,093 MiB, with 1,670 MiB
+reported free. Four requests returned finite raw TRUE/FALSE token scores.
+This establishes hardware fit and score extraction, not calibration or the
+full milestone implementation.
 
+- [GPU smoke test and reproduction instructions](docs/gpu-smoke-2026-09-24.md)
 - [Milestone design](docs/plans/2026-09-24-milestone-1-design.md)
 - [Implementation plan](docs/plans/2026-09-24-milestone-1.md)
 
 Development is local and tracked in Git. Model weights, caches, credentials, and
-run outputs stay outside version control. Model, hardware, dependency versions,
-and numerical acceptance thresholds remain to be selected.
+run outputs stay outside version control. The smoke test pins its model revision
+and dependencies; benchmark acceptance thresholds remain to be selected.
