@@ -1,0 +1,186 @@
+[
+  {
+    "id": "bulgaria-january",
+    "country": "Bulgaria",
+    "month": "January",
+    "expected": "cold",
+    "ambiguous": false,
+    "warmer_month": "July",
+    "sources": [
+      {
+        "url": "https://climateknowledgeportal.worldbank.org/sites/default/files/2021-06/15848-WB_Bulgaria%20Country%20Profile-WEB.pdf",
+        "rationale": "World Bank profile search excerpt: mean monthly temperatures about -1 C in January and 21 C in July/August; national means do not fix a daytime hot/mild boundary."
+      }
+    ]
+  },
+  {
+    "id": "bulgaria-july",
+    "country": "Bulgaria",
+    "month": "July",
+    "expected": null,
+    "ambiguous": true,
+    "warmer_month": "July",
+    "sources": [
+      {
+        "url": "https://climateknowledgeportal.worldbank.org/sites/default/files/2021-06/15848-WB_Bulgaria%20Country%20Profile-WEB.pdf",
+        "rationale": "World Bank profile search excerpt: mean monthly temperatures about -1 C in January and 21 C in July/August; national means do not fix a daytime hot/mild boundary."
+      }
+    ]
+  },
+  {
+    "id": "germany-january",
+    "country": "Germany",
+    "month": "January",
+    "expected": "cold",
+    "ambiguous": false,
+    "warmer_month": "July",
+    "sources": [
+      {
+        "url": "https://www.dwd.de/EN/press/press_release/EN/2025/20250130_the_weather_in_germany_in_January_2025.pdf?__blob=publicationFile&v=2",
+        "rationale": "DWD search excerpt: January 2025 mean 2 C versus 1961-1990 January reference -0.5 C. Broad winter-cold reference; July hot versus mild is ambiguous."
+      }
+    ]
+  },
+  {
+    "id": "germany-july",
+    "country": "Germany",
+    "month": "July",
+    "expected": null,
+    "ambiguous": true,
+    "warmer_month": "July",
+    "sources": [
+      {
+        "url": "https://www.dwd.de/EN/press/press_release/EN/2025/20250130_the_weather_in_germany_in_January_2025.pdf?__blob=publicationFile&v=2",
+        "rationale": "DWD search excerpt: January 2025 mean 2 C versus 1961-1990 January reference -0.5 C. Broad winter-cold reference; July hot versus mild is ambiguous."
+      }
+    ]
+  },
+  {
+    "id": "canada-january",
+    "country": "Canada",
+    "month": "January",
+    "expected": "cold",
+    "ambiguous": false,
+    "warmer_month": "July",
+    "sources": [
+      {
+        "url": "https://natural-resources.canada.ca/sites/www.nrcan.gc.ca/files/energy/Climate-change/pdf/CCCR_Chapter4-Temperature%20and%20Precipitation%20Across%20Canada.pdf",
+        "rationale": "Canadian climate report: winter averages range from about -5 C in south to -35 C in far north; summer averages about 22 C to 2 C. Summer country-wide label ambiguous."
+      },
+      {
+        "url": "https://www.canada.ca/en/environment-climate-change/services/environmental-indicators/temperature-change.html",
+        "rationale": "Canada defines winter as December-February and summer as June-August."
+      }
+    ]
+  },
+  {
+    "id": "canada-july",
+    "country": "Canada",
+    "month": "July",
+    "expected": null,
+    "ambiguous": true,
+    "warmer_month": "July",
+    "sources": [
+      {
+        "url": "https://natural-resources.canada.ca/sites/www.nrcan.gc.ca/files/energy/Climate-change/pdf/CCCR_Chapter4-Temperature%20and%20Precipitation%20Across%20Canada.pdf",
+        "rationale": "Canadian climate report: winter averages range from about -5 C in south to -35 C in far north; summer averages about 22 C to 2 C. Summer country-wide label ambiguous."
+      },
+      {
+        "url": "https://www.canada.ca/en/environment-climate-change/services/environmental-indicators/temperature-change.html",
+        "rationale": "Canada defines winter as December-February and summer as June-August."
+      }
+    ]
+  },
+  {
+    "id": "australia-january",
+    "country": "Australia",
+    "month": "January",
+    "expected": null,
+    "ambiguous": true,
+    "warmer_month": "January",
+    "sources": [
+      {
+        "url": "https://media.bom.gov.au/social/blog/1989/the-wet-and-the-dry-seasons-in-the-topics/",
+        "rationale": "BOM describes southern winter versus tropical northern wet/dry seasons. Northern May-September conditions can still be warm; nationwide labels ambiguous."
+      }
+    ]
+  },
+  {
+    "id": "australia-july",
+    "country": "Australia",
+    "month": "July",
+    "expected": null,
+    "ambiguous": true,
+    "warmer_month": "January",
+    "sources": [
+      {
+        "url": "https://media.bom.gov.au/social/blog/1989/the-wet-and-the-dry-seasons-in-the-topics/",
+        "rationale": "BOM describes southern winter versus tropical northern wet/dry seasons. Northern May-September conditions can still be warm; nationwide labels ambiguous."
+      }
+    ]
+  },
+  {
+    "id": "argentina-january",
+    "country": "Argentina",
+    "month": "January",
+    "expected": null,
+    "ambiguous": true,
+    "warmer_month": "January",
+    "sources": [
+      {
+        "url": "https://www.argentina.gob.ar/node/208806",
+        "rationale": "Government geography describes latitude-driven tropical/subtropical to cold southern climates; both national month labels ambiguous."
+      },
+      {
+        "url": "https://www.argentina.gob.ar/node/461805",
+        "rationale": "Government 2024 climate report describes summer heat waves in January-February; supports southern seasonal orientation, not a fixed national temperature class."
+      }
+    ]
+  },
+  {
+    "id": "argentina-july",
+    "country": "Argentina",
+    "month": "July",
+    "expected": null,
+    "ambiguous": true,
+    "warmer_month": "January",
+    "sources": [
+      {
+        "url": "https://www.argentina.gob.ar/node/208806",
+        "rationale": "Government geography describes latitude-driven tropical/subtropical to cold southern climates; both national month labels ambiguous."
+      },
+      {
+        "url": "https://www.argentina.gob.ar/node/461805",
+        "rationale": "Government 2024 climate report describes summer heat waves in January-February; supports southern seasonal orientation, not a fixed national temperature class."
+      }
+    ]
+  },
+  {
+    "id": "singapore-january",
+    "country": "Singapore",
+    "month": "January",
+    "expected": "hot",
+    "ambiguous": false,
+    "warmer_month": null,
+    "sources": [
+      {
+        "url": "https://www.weather.gov.sg/climate-climate-of-singapore/",
+        "rationale": "MSS describes little month-to-month temperature variation, typical daytime maxima around 31-33 C, and warm nights. Both months receive the analyst hot label."
+      }
+    ]
+  },
+  {
+    "id": "singapore-july",
+    "country": "Singapore",
+    "month": "July",
+    "expected": "hot",
+    "ambiguous": false,
+    "warmer_month": null,
+    "sources": [
+      {
+        "url": "https://www.weather.gov.sg/climate-climate-of-singapore/",
+        "rationale": "MSS describes little month-to-month temperature variation, typical daytime maxima around 31-33 C, and warm nights. Both months receive the analyst hot label."
+      }
+    ]
+  }
+]
