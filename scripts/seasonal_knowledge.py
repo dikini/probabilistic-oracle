@@ -131,6 +131,13 @@ def report_saved(directory):
     return report
 
 
+def validate_baseline_backend(manifest, engine, sampling):
+    backend = manifest.get('backend', {})
+    if backend.get('engine') != engine or backend.get('sampling') != sampling:
+        raise ValueError('Baseline backend must match the selected model, engine and sampling')
+    return backend
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,required=True);p.add_argument('--deadline');p.add_argument('--report-only',action='store_true');p.add_argument('--facts',action='store_true');p.add_argument('--baseline',type=Path);p.add_argument('--model-profile',choices=('qwen3-0.6b','qwen3-4b-awq'),default='qwen3-0.6b');args=p.parse_args()
     if args.report_only:
@@ -152,6 +159,8 @@ def main():
         if baseline['status']!='complete':raise ValueError('Incomplete baseline')
         baseline_manifest=json.loads((args.baseline/'manifest.json').read_text())
         if 'supplied_facts' in baseline_manifest:raise ValueError('Baseline must be no-facts run')
+        from probabilistic_oracle.backends.vllm import engine_config
+        manifest['baseline_backend']=validate_baseline_backend(baseline_manifest,engine_config(args.model_profile),settings)
         manifest.update(supplied_facts=facts,facts_sha256=digest(facts),baseline_report=baseline,baseline_report_sha256=digest(baseline),
                         baseline_directory=str(args.baseline),baseline_query_sha256=baseline_manifest['query_sha256'])
     write(args.output/'manifest.json',manifest)

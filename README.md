@@ -84,6 +84,7 @@ not meet its continuation criteria: calibrated probability RMSE was 0.2499,
 slightly worse than both constant baselines, and conjunction error was 0.2410.
 The measured setup is not yet a useful calibrated probability oracle.
 
+- [Larger quantized model on matched seasonal tests](docs/larger-seasonal-2026-09-28.md)
 - [Supplied seasonal knowledge: RAG-generation diagnostic](docs/seasonal-facts-2026-09-28.md)
 - [Broad seasonal knowledge with constrained output](docs/seasonal-knowledge-2026-09-28.md)
 - [Counterbalanced category letters and display order](docs/counterbalanced-readout-2026-09-24.md)

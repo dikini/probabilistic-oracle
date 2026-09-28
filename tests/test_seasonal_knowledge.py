@@ -101,3 +101,14 @@ def test_provided_labels_scored_separately_from_climate_labels():
     assert r['supplied_knowledge_agreement']==dict(correct=36,total=36)
     assert r['strict']==dict(correct=15,total=15)
     assert sum(q['case']['ambiguous'] for q in qs)==21
+
+
+def test_baseline_requires_same_model_and_sampling():
+    from probabilistic_oracle.backends.vllm import engine_config
+    small = dict(engine=engine_config(), sampling=dict(temperature=0))
+    large = dict(engine=engine_config('qwen3-4b-awq'), sampling=dict(temperature=0))
+    assert m.validate_baseline_backend(dict(backend=large), large['engine'], large['sampling']) == large
+    with pytest.raises(ValueError, match='Baseline backend'):
+        m.validate_baseline_backend(dict(backend=small), large['engine'], large['sampling'])
+    with pytest.raises(ValueError, match='Baseline backend'):
+        m.validate_baseline_backend(dict(backend=large), large['engine'], dict(temperature=1))
