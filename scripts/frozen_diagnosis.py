@@ -139,6 +139,7 @@ def scores(pred,target):
 def report_saved(directory):
     manifest=json.loads((directory/'manifest.json').read_text());requests=manifest['requests']
     if base.digest(requests)!=manifest['requests_sha256']:raise ValueError('Request hash mismatch')
+    if manifest.get('worlds')!=worlds():raise ValueError('World definition differs from the saved experiment')
     records=[json.loads(line) for line in (directory/'records.jsonl').read_text().splitlines()]
     if len(records)!=len(requests) or {r['id'] for r in records}!={r['id'] for r in requests}:raise ValueError('Incomplete or duplicate records')
     by={r['id']:r for r in records};probabilities={};seconds={}

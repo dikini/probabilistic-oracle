@@ -46,6 +46,48 @@ def test_scores_use_distribution_not_argmax_truth():
 
 
 def test_missing_observations_rejected(tmp_path):
-    m.base.write(tmp_path/'manifest.json',dict(requests=m.make_requests(),requests_sha256=m.base.digest(m.make_requests())))
+    m.base.write(tmp_path/'manifest.json',dict(requests=m.make_requests(),requests_sha256=m.base.digest(m.make_requests()),worlds=m.worlds()))
     (tmp_path/'records.jsonl').write_text('')
     with pytest.raises(ValueError,match='Incomplete'):m.report_saved(tmp_path)
+
+
+def test_saved_world_definition_cannot_silently_change(tmp_path):
+    import copy
+    for component in ('prior','joint'):
+        changed=copy.deepcopy(m.worlds())
+        if component=='prior':changed['independent']['prior']=[.4,.3,.3]
+        else:changed['independent']['joint']['coolant']=[.1,.1,.2,.6]
+        requests=m.make_requests()
+        m.base.write(tmp_path/'manifest.json',dict(requests=requests,requests_sha256=m.base.digest(requests),worlds=changed))
+        (tmp_path/'records.jsonl').write_text('')
+        with pytest.raises(ValueError,match='World definition'):m.report_saved(tmp_path)
+
+
+def test_perfect_parameter_records_recover_exact_joint_reference(tmp_path):
+    """Synthetic CPU fixture, not observations from a model."""
+    import json
+    requests=m.make_requests();records=[]
+    for q in requests:
+        role=q['role'];keys=list(q['question']['criteria'])
+        if role=='extract':values={k:1-3e-8 if k==q['pattern'] else 1e-8 for k in keys}
+        else:
+            world=m.worlds()[q['world']]
+            if role=='prior':values=dict(zip(m.FAULTS,world['prior']))
+            elif role=='joint':values=dict(zip(m.PATTERNS,world['joint'][q['fault']]))
+            elif role in ('x','y'):
+                p=m.marginals(world['joint'][q['fault']])[0 if role=='x' else 1];values={'present':p,'absent':1-p}
+            else:values=dict(zip(m.FAULTS,m.truth(world,q['pattern'])))
+        records.append(dict(id=q['id'],request=q,status='ok',seconds=.01,logits=[math.log(values[k]) for k in keys],shipped_temperature=1.,
+            response={'answers':{'answer':{'choice':max(keys,key=lambda k:values[k]),'probabilities':{k:round(values[k],4) for k in keys}}}}))
+    m.base.write(tmp_path/'manifest.json',dict(requests=requests,requests_sha256=m.base.digest(requests),worlds=m.worlds()))
+    (tmp_path/'records.jsonl').write_text(''.join(json.dumps(r)+'\n' for r in records))
+    report=m.report_saved(tmp_path)['readouts']['shipped']['summary']
+    for world in m.worlds():
+        truth=report[f'{world}/full/reference_joint']
+        for method in ('direct','factorized_joint','hybrid_joint'):
+            for metric in ('accuracy','log_loss','brier'):
+                assert report[f'{world}/full/{method}'][metric]==pytest.approx(truth[metric])
+        assert report[f'{world}/full/factorized_joint']['unique_requests']==48
+        assert report[f'{world}/full/factorized_naive']['unique_requests']==66
+        assert report[f'{world}/full/hybrid_joint']['unique_requests']==24
+        assert f'{world}/reduced/hybrid_joint' not in report

@@ -84,6 +84,7 @@ not meet its continuation criteria: calibrated probability RMSE was 0.2499,
 slightly worse than both constant baselines, and conjunction error was 0.2410.
 The measured setup is not yet a useful calibrated probability oracle.
 
+- [Frozen diagnosis: direct, factorized and hybrid Bayes](docs/frozen-diagnosis-2026-09-28.md)
 - [Laya: evidence classification and Bayesian-prior evaluation](docs/laya-oracle-2026-09-28.md)
 - [Larger quantized model on matched seasonal tests](docs/larger-seasonal-2026-09-28.md)
 - [Supplied seasonal knowledge: RAG-generation diagnostic](docs/seasonal-facts-2026-09-28.md)
