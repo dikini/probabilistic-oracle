@@ -56,3 +56,27 @@ secondary: do not hide failed discrimination with aggregate calibrated scores.
 
 Keep all weights, environments and raw run artifacts out of Git. No HTTP service,
 retriever, probability calibration claim across domains, or training in this round.
+
+## Exploratory follow-up, specified after the initial 210-request results
+
+The first run followed 48/48 direct changed-fact controls, but chose cold for
+all no-facts weather prompts and failed to provide accurate base-rate probabilities.
+Two bounded follow-ups will investigate useful operation, without overwriting the
+initial results or treating reused cases as a holdout:
+
+- Native weather layout: repeat 72 weather requests, put the actual original
+  question text in SDK instructions, and only the reference passage in state.
+  For no-facts state use 'Use general world knowledge.' This tests whether the
+  initial task-inside-state mapping obscured knowledge. No fact changes.
+- Count-based priors: classify 60 fictional support records as billing or delivery,
+  reversing the order of descriptive category keys (120 requests). Three 20-record
+  cohorts have billing counts 4, 10 and 16. Use ten distinct phrases per category,
+  reused across cohorts, plus record identifiers. Freeze all examples before
+  inference. Report accuracy, order sensitivity, class-count fractions and external
+  Beta(1,1)-updated prevalence means per cohort and order. Compare with known
+  synthetic counts. Never present these constructed rates as real-world priors.
+
+This tests a different use: Laya extracts categories from documents, while external
+counting estimates prevalence. Model confidence does not become a frequency.
+Real application would require representative sampling and held-out classification
+error estimates; this synthetic demonstration cannot establish those conditions.

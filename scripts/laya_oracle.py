@@ -61,6 +61,58 @@ def make_requests():
     return rows
 
 
+
+def make_followup_requests():
+    import copy
+    rows=[]
+    facts=json.loads((ROOT/'bench/cases/seasonal-facts.json').read_text())
+    for original in make_requests():
+        if original['suite']!='weather':continue
+        q=copy.deepcopy(original);q['id']='native/'+q['id']
+        text=q['state']
+        if q['supplied']:
+            block='Background facts for this question (take as given):\n'+facts[q['case']['country']]['text']
+            assert text.startswith(block+'\n\n')
+            q['state']=block;text=text[len(block)+2:]
+        else:q['state']='Use general world knowledge.'
+        q['question']['instructions']=text;rows.append(q)
+    billing=[
+        'I was charged twice for the same purchase. Please refund the duplicate.',
+        'The invoice total is higher than the agreed price.',
+        'Please update the payment card used for my subscription.',
+        'My refund has not appeared in my bank account.',
+        'I need a receipt for the amount you debited yesterday.',
+        'The discount code was accepted but the full price was charged.',
+        'Why is there an unexpected fee on my monthly bill?',
+        'My payment was declined despite sufficient funds.',
+        'Please correct the tax amount on this invoice.',
+        'You billed me after I cancelled the service.',
+    ]
+    delivery=[
+        'The parcel tracking page has not updated for a week.',
+        'My package was sent to the wrong street address.',
+        'The courier marked my order delivered, but it never arrived.',
+        'Can you change the destination before the parcel is dispatched?',
+        'When will the replacement package reach my house?',
+        'The delivery driver could not find our building.',
+        'Please leave the shipment at the collection point.',
+        'The parcel is stuck at the regional sorting depot.',
+        'I need to reschedule the courier visit for tomorrow.',
+        'The shipment arrived three days later than promised.',
+    ]
+    for cohort,count in [('low',4),('balanced',10),('high',16)]:
+        labels=['billing']*count+['delivery']*(20-count)
+        random.Random(20260928+count).shuffle(labels)
+        for i,label in enumerate(labels):
+            text=(billing if label=='billing' else delivery)[i%10]
+            for order in (0,1):
+                criteria={'billing':'Payments, charges, invoices, refunds or account billing.', 'delivery':'Shipping, parcels, couriers, tracking or delivery destinations.'}
+                if order:criteria=dict(reversed(list(criteria.items())))
+                rows.append(dict(id=f'corpus/{cohort}/{i}/{order}',suite='corpus',cohort=cohort,case_id=f'{cohort}/{i}',order=order,target=label,
+                    state=f'Record {cohort}-{i}: '+text,question=dict(type='choice',instructions='Which department should handle this request?',criteria=criteria),semantics={k:k for k in criteria}))
+    return rows
+
+
 def distribution(values,k):
     if len(values)!=k or any(not math.isfinite(v) or v<0 or v>1 for v in values) or abs(sum(values)-1)>1e-6:
         raise ValueError('Invalid or missing probability distribution')
@@ -100,6 +152,22 @@ def fit_temperature(ps,targets):
     return min(grid,key=lambda t:metrics([scale(p,t) for p in ps],targets)['expected_log_loss'])
 
 
+
+def checked_probabilities(q,r):
+    keys=list(q['semantics']) if q['question']['type']=='noul' else list(q['question']['criteria'])
+    if len(r['logits'])!=len(keys):raise ValueError('Wrong logit count')
+    raw=dict(zip(keys,softmax(r['logits'])))
+    shipped=dict(zip(keys,softmax(r['logits'],r['shipped_temperature'])))
+    answer=r['response']['answers']['answer']
+    if q['question']['type']=='noul':
+        if not math.isfinite(answer['noul']) or abs(shipped['true']-answer['noul'])>0.000051:raise ValueError('SDK probability mismatch')
+    else:
+        returned=answer['probabilities']
+        if set(returned)!=set(keys) or any(not math.isfinite(returned[k]) or abs(shipped[k]-returned[k])>0.000051 for k in keys):raise ValueError('SDK probability mismatch')
+        if answer['choice']!=max(shipped,key=shipped.get):raise ValueError('SDK argmax mismatch')
+    return raw,shipped
+
+
 def report_saved(directory):
     manifest=json.loads((directory/'manifest.json').read_text());requests=manifest['requests']
     if digest(requests)!=manifest['requests_sha256']:raise ValueError('Request hash mismatch')
@@ -109,8 +177,7 @@ def report_saved(directory):
     for q in requests:
         r=by[q['id']]
         if r['request']!=q or r['status']!='ok':raise ValueError('Failed or mismatched request')
-        keys=list(q['semantics']) if q['question']['type']=='noul' else list(q['question']['criteria'])
-        raw=dict(zip(keys,softmax(r['logits'])));shipped=dict(zip(keys,softmax(r['logits'],r['shipped_temperature'])))
+        raw,shipped=checked_probabilities(q,r)
         pairs.append((q,r,raw,shipped))
     result=dict(total=len(records),status='complete',weather={},changed={},rates={})
     for supplied in (False,True):
@@ -123,9 +190,10 @@ def report_saved(directory):
         result['weather'][str(supplied)]=dict(profile_correct=correct,total=len(subset),strict_correct=strict,strict_total=15,stable_cases=sum(len(set(v))==1 for v in cases.values()),answers=dict(cases))
     subset=[p for p in pairs if p[0]['suite']=='changed']
     result['changed']=dict(correct=sum(max(p[3],key=p[3].get)==p[0]['target'] for p in subset),total=len(subset),
-        mean_target_probability=sum(p[3][p[0]['target']] for p in subset)/len(subset))
+        mean_target_probability=sum(p[3][p[0]['target']] for p in subset)/len(subset) if subset else None)
     for family in ('choice','noul'):
         subset=[p for p in pairs if p[0]['suite']=='rate' and p[0]['question']['type']==family]
+        if not subset:continue
         cal=[p for p in subset if p[0]['split']=='calibration'];test=[p for p in subset if p[0]['split']=='test']
         cp=[positive_probability(q,raw) for q,r,raw,shipped in cal];cy=[q['target'] for q,r,raw,shipped in cal]
         t=fit_temperature(cp,cy);ys=[q['target'] for q,r,raw,shipped in test]
@@ -139,14 +207,28 @@ def report_saved(directory):
             posterior={name:metrics([posterior(p) for p in ps],[posterior(y) for y in ys]) for name,ps in [('raw',rawps),('shipped',shippedps),('fitted',fitted),('constant',[.5]*len(ys))]},
             max_presentation_range=max(max(ps)-min(ps) for ps in spread.values()),
             predictions=[dict(id=q['id'],target=y,raw=p,shipped=s,fitted=f) for (q,_,_,_),y,p,s,f in zip(test,ys,rawps,shippedps,fitted)])
+    corpus=[p for p in pairs if p[0]['suite']=='corpus']
+    if corpus:
+        result['corpus']={}
+        for cohort in ('low','balanced','high'):
+            for order in (0,1):
+                group=[p for p in corpus if p[0]['cohort']==cohort and p[0]['order']==order]
+                answers=[max(p[3],key=p[3].get) for p in group]
+                positives=answers.count('billing');truth=sum(p[0]['target']=='billing' for p in group)
+                result['corpus'][f'{cohort}/{order}']=dict(total=len(group),correct=sum(a==p[0]['target'] for a,p in zip(answers,group)),
+                    billing_count=positives,reference_billing_count=truth,empirical_prior=positives/len(group),
+                    beta_posterior_mean=(positives+1)/(len(group)+2),reference_beta_mean=(truth+1)/(len(group)+2))
+        by_case=defaultdict(list)
+        for q,r,raw,shipped in corpus:by_case[q['case_id']].append(max(shipped,key=shipped.get))
+        result['corpus_order_disagreements']=sum(len(set(v))>1 for v in by_case.values())
     return result
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--output',type=Path,required=True);p.add_argument('--report-only',action='store_true');p.add_argument('--deadline');args=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--output',type=Path,required=True);p.add_argument('--report-only',action='store_true');p.add_argument('--deadline');p.add_argument('--followup',action='store_true');args=p.parse_args()
     if args.report_only:write(args.output/'report.json',report_saved(args.output));return
     if not args.deadline:p.error('--deadline required')
-    requests=make_requests();args.output.mkdir(parents=True,exist_ok=False)
+    requests=make_followup_requests() if args.followup else make_requests();args.output.mkdir(parents=True,exist_ok=False)
     manifest=dict(model=MODEL,revision=REVISION,requests=requests,requests_sha256=digest(requests),
         code_revision=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),working_tree=subprocess.check_output(['git','status','--short'],text=True).strip(),
         protocol=(ROOT/'docs/plans/2026-09-28-laya-oracle.md').read_text(),started_utc=datetime.now(timezone.utc).isoformat())

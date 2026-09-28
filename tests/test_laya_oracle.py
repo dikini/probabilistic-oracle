@@ -37,3 +37,33 @@ def test_expected_losses_and_bayes():
     assert m.posterior(.2)==pytest.approx(.5)
     assert m.posterior(0)==0 and m.posterior(1)==1
     assert m.fit_temperature([.2,.8],[.2,.8])==pytest.approx(1)
+
+
+def test_logit_capture_agrees_with_native_response():
+    q=dict(question=dict(type='choice',criteria={'B':'yes','A':'no'}),semantics={'B':'positive','A':'negative'})
+    r=dict(logits=[0.,0.],shipped_temperature=1.,response={'answers':{'answer':{'choice':'B','probabilities':{'B':.5,'A':.5}}}})
+    assert m.checked_probabilities(q,r)[1]=={'B':.5,'A':.5}
+    import copy
+    for logits in ([0.],[0.,0.,0.]):
+        bad=copy.deepcopy(r);bad['logits']=logits
+        with pytest.raises(ValueError,match='logit'):m.checked_probabilities(q,bad)
+    bad=copy.deepcopy(r);bad['response']['answers']['answer']['probabilities']['B']=.6
+    with pytest.raises(ValueError,match='SDK'):m.checked_probabilities(q,bad)
+    q=dict(question=dict(type='noul'),semantics={'false':'negative','true':'positive'})
+    r=dict(logits=[0.,0.],shipped_temperature=1.,response={'answers':{'answer':{'noul':.5}}})
+    assert m.checked_probabilities(q,r)[1]['true']==.5
+    r['response']['answers']['answer']['noul']=.7
+    with pytest.raises(ValueError,match='SDK'):m.checked_probabilities(q,r)
+
+
+def test_followup_corpus_counts_and_native_layout():
+    rows=m.make_followup_requests()
+    assert len(rows)==192
+    weather=[r for r in rows if r['suite']=='weather']
+    assert len(weather)==72
+    assert all('Which category' in r['question']['instructions'] for r in weather)
+    assert all('Which category' not in r['state'] for r in weather)
+    for cohort,expected in [('low',4),('balanced',10),('high',16)]:
+        for order in (0,1):
+            group=[r for r in rows if r.get('cohort')==cohort and r['order']==order]
+            assert len(group)==20 and sum(r['target']=='billing' for r in group)==expected
