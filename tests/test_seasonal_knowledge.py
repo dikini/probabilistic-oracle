@@ -69,3 +69,35 @@ def test_expected_and_reversed_seasonal_contrasts():
 def test_stored_answer_cannot_override_raw_output():
     qs=m.queries(m.load_cases());rows=[dict(id=q['id'],status='ok',text='hot',finish_reason='stop',answer='cold') for q in qs]
     assert m.summarize(qs,rows)['status']=='incomplete'
+
+
+def test_supplied_facts_preserve_original_prompt_as_suffix():
+    cases=m.load_cases();facts={c['country']:dict(text='Fact about '+c['country']) for c in cases}
+    old=m.queries(cases);new=m.queries(cases,facts)
+    for a,b in zip(old,new):
+        assert b['text'].endswith(a['text'])
+        assert b['text'].startswith('Background facts for this question (take as given):\nFact about '+a['case']['country']+'\n\n')
+        assert a['id']==b['id'] and a['case']==b['case']
+
+
+def test_missing_facts_rejected():
+    with pytest.raises(ValueError):m.queries(m.load_cases(),{})
+
+
+def test_comparison_counts_changes_without_changing_labels():
+    qs=m.queries(m.load_cases())
+    a=m.summarize(qs,[dict(id=q['id'],status='ok',text='unknown',finish_reason='stop',answer='unknown') for q in qs])
+    b=m.summarize(qs,[dict(id=q['id'],status='ok',text='cold',finish_reason='stop',answer='cold') for q in qs])
+    result=m.compare_reports(a,b)
+    assert result['changed_answers']==36 and result['strict_correct_delta']==9
+
+
+def test_provided_labels_scored_separately_from_climate_labels():
+    import json
+    facts=json.loads((m.ROOT/'bench/cases/seasonal-facts.json').read_text())
+    qs=m.queries(m.load_cases(),facts)
+    rows=[dict(id=q['id'],status='ok',text=q['provided_label'],finish_reason='stop',answer=q['provided_label']) for q in qs]
+    r=m.summarize(qs,rows)
+    assert r['supplied_knowledge_agreement']==dict(correct=36,total=36)
+    assert r['strict']==dict(correct=15,total=15)
+    assert sum(q['case']['ambiguous'] for q in qs)==21

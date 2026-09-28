@@ -26,7 +26,9 @@ def write(path,value):path.write_text(json.dumps(value,indent=2,allow_nan=False)
 def load_cases():return json.loads((ROOT/'bench/cases/seasonal-knowledge.json').read_text())
 
 
-def queries(cases):
+def queries(cases,facts=None):
+    if facts is not None and any(c['country'] not in facts or not facts[c['country']].get('text') for c in cases):
+        raise ValueError('Missing country facts')
     result=[]
     for case in cases:
         for variant in VARIANTS:
@@ -38,7 +40,12 @@ def queries(cases):
                 if variant=='emphasis':question=f'Which category best describes typical daytime temperatures in {country.upper()} in {month.upper()}?'
                 text=scope+'\n'+question
             text+='\nAnswer with exactly one word: cold, mild, hot, or unknown. Use unknown if you cannot select a category from your general knowledge. Do not explain.'
-            result.append(dict(id=case['id']+'/'+variant,case=case,variant=variant,text=text))
+            if facts is not None:
+                text='Background facts for this question (take as given):\n'+facts[country]['text']+'\n\n'+text
+            q=dict(id=case['id']+'/'+variant,case=case,variant=variant,text=text)
+            if facts is not None and 'provided_labels' in facts[country]:
+                q['provided_label']=facts[country]['provided_labels'][month]
+            result.append(q)
     return result
 
 
@@ -88,7 +95,23 @@ def summarize(qs,records):
                 outcome='expected' if july_warmer==(warmer=='July') else 'reversed'
             report['seasonal'].append(dict(country=country,variant=variant,january=jan,july=jul,outcome=outcome))
     report['seasonal_counts']=dict(Counter(x['outcome'] for x in report['seasonal']))
+    supplied=[q for q in qs if 'provided_label' in q]
+    if supplied:
+        report['supplied_knowledge_agreement']=dict(correct=sum(answers[q['id']]==q['provided_label'] for q in supplied),total=len(supplied))
     return report
+
+
+def compare_reports(baseline,current):
+    if baseline['status']!='complete' or current['status']!='complete':
+        return dict(status='incomplete')
+    if set(baseline['cases'])!=set(current['cases']):raise ValueError('Unmatched baseline cases')
+    changed=0
+    for case,row in current['cases'].items():
+        old=baseline['cases'][case]
+        if any(row[k]!=old[k] for k in ('country','month','expected','ambiguous')):raise ValueError('Changed case references')
+        changed+=sum(row['answers'][v]!=old['answers'][v] for v in VARIANTS)
+    return dict(changed_answers=changed,strict_correct_delta=current['strict']['correct']-baseline['strict']['correct'],
+        unknown_delta=current['unknown_count']-baseline['unknown_count'],stable_cases_delta=current['stable_cases']-baseline['stable_cases'])
 
 
 def report_saved(directory):
@@ -100,27 +123,42 @@ def report_saved(directory):
     for r in records:
         if r['status']=='ok' and (r['request_text']!=by[r['id']]['text'] or r['provenance']!=manifest['backend']):
             raise ValueError('Prompt or provenance mismatch')
-    return summarize(manifest['queries'],records)
+    report=summarize(manifest['queries'],records)
+    if 'supplied_facts' in manifest:
+        if digest(manifest['supplied_facts'])!=manifest['facts_sha256'] or digest(manifest['baseline_report'])!=manifest['baseline_report_sha256']:
+            raise ValueError('Facts/baseline hash mismatch')
+        report['comparison_with_no_facts']=compare_reports(manifest['baseline_report'],report)
+    return report
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,required=True);p.add_argument('--deadline');p.add_argument('--report-only',action='store_true');args=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,required=True);p.add_argument('--deadline');p.add_argument('--report-only',action='store_true');p.add_argument('--facts',action='store_true');p.add_argument('--baseline',type=Path);args=p.parse_args()
     if args.report_only:
         report=report_saved(args.output);write(args.output/'report.json',report);print(json.dumps(report));return
     if not args.deadline:p.error('--deadline required')
-    deadline=datetime.fromisoformat(args.deadline).timestamp();qs=queries(load_cases());protocol=PROTOCOL.read_text()
+    if args.facts and not args.baseline:p.error('--facts requires --baseline')
+    facts=json.loads((ROOT/'bench/cases/seasonal-facts.json').read_text()) if args.facts else None
+    deadline=datetime.fromisoformat(args.deadline).timestamp();qs=queries(load_cases(),facts)
+    protocol=(ROOT/'docs/plans/2026-09-28-seasonal-facts.md' if args.facts else PROTOCOL).read_text()
     args.output.mkdir(parents=True,exist_ok=False)
     settings=dict(temperature=0,max_tokens=16,seed=0,structured_outputs=dict(choice=CHOICES))
     manifest=dict(queries=qs,query_sha256=digest(qs),protocol=protocol,protocol_sha256=digest(protocol),sampling=settings,
         code_revision=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),working_tree=subprocess.check_output(['git','status','--short'],text=True).strip(),
         started_utc=datetime.now(timezone.utc).isoformat())
+    if args.facts:
+        baseline=report_saved(args.baseline)
+        if baseline['status']!='complete':raise ValueError('Incomplete baseline')
+        baseline_manifest=json.loads((args.baseline/'manifest.json').read_text())
+        if 'supplied_facts' in baseline_manifest:raise ValueError('Baseline must be no-facts run')
+        manifest.update(supplied_facts=facts,facts_sha256=digest(facts),baseline_report=baseline,baseline_report_sha256=digest(baseline),
+                        baseline_directory=str(args.baseline),baseline_query_sha256=baseline_manifest['query_sha256'])
     write(args.output/'manifest.json',manifest)
     from probabilistic_oracle.backends.vllm import VllmOracle
     from vllm import SamplingParams
     from vllm.sampling_params import StructuredOutputsParams
     oracle=VllmOracle()
     params=SamplingParams(temperature=0,max_tokens=16,seed=0,structured_outputs=StructuredOutputsParams(choice=CHOICES))
-    backend=dict(oracle.provenance,sampling=settings,prompt_template='seasonal-knowledge-v1',
+    backend=dict(oracle.provenance,sampling=settings,prompt_template='seasonal-facts-v1' if args.facts else 'seasonal-knowledge-v1',
                  structured_output_config=asdict(oracle.llm.llm_engine.vllm_config.structured_outputs_config))
     manifest['backend']=backend;write(args.output/'manifest.json',manifest)
     schedule=list(qs);random.Random(2026092801).shuffle(schedule)

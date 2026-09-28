@@ -1,0 +1,70 @@
+{
+  "Bulgaria": {
+    "text": "Reference profile for Bulgaria. This is a simplified country-level classification for this task, not a description of every region. Typical daytime temperature category in January: cold. Typical daytime temperature category in July: hot.",
+    "source_urls": [
+      "https://climateknowledgeportal.worldbank.org/sites/default/files/2021-06/15848-WB_Bulgaria%20Country%20Profile-WEB.pdf"
+    ],
+    "provided_labels": {
+      "January": "cold",
+      "July": "hot"
+    },
+    "label_basis": "Evaluator-defined coarse profile for controlled context uptake; ambiguous national labels are task stipulations, not measured climatological truth."
+  },
+  "Germany": {
+    "text": "Reference profile for Germany. This is a simplified country-level classification for this task, not a description of every region. Typical daytime temperature category in January: cold. Typical daytime temperature category in July: mild.",
+    "source_urls": [
+      "https://www.dwd.de/EN/press/press_release/EN/2025/20250130_the_weather_in_germany_in_January_2025.pdf?__blob=publicationFile&v=2"
+    ],
+    "provided_labels": {
+      "January": "cold",
+      "July": "mild"
+    },
+    "label_basis": "Evaluator-defined coarse profile for controlled context uptake; ambiguous national labels are task stipulations, not measured climatological truth."
+  },
+  "Canada": {
+    "text": "Reference profile for Canada. This is a simplified country-level classification for this task, not a description of every region. Typical daytime temperature category in January: cold. Typical daytime temperature category in July: mild.",
+    "source_urls": [
+      "https://natural-resources.canada.ca/sites/www.nrcan.gc.ca/files/energy/Climate-change/pdf/CCCR_Chapter4-Temperature%20and%20Precipitation%20Across%20Canada.pdf",
+      "https://www.canada.ca/en/environment-climate-change/services/environmental-indicators/temperature-change.html"
+    ],
+    "provided_labels": {
+      "January": "cold",
+      "July": "mild"
+    },
+    "label_basis": "Evaluator-defined coarse profile for controlled context uptake; ambiguous national labels are task stipulations, not measured climatological truth."
+  },
+  "Australia": {
+    "text": "Reference profile for Australia. This is a simplified country-level classification for this task, not a description of every region. Typical daytime temperature category in January: hot. Typical daytime temperature category in July: mild.",
+    "source_urls": [
+      "https://media.bom.gov.au/social/blog/1989/the-wet-and-the-dry-seasons-in-the-topics/"
+    ],
+    "provided_labels": {
+      "January": "hot",
+      "July": "mild"
+    },
+    "label_basis": "Evaluator-defined coarse profile for controlled context uptake; ambiguous national labels are task stipulations, not measured climatological truth."
+  },
+  "Argentina": {
+    "text": "Reference profile for Argentina. This is a simplified country-level classification for this task, not a description of every region. Typical daytime temperature category in January: hot. Typical daytime temperature category in July: cold.",
+    "source_urls": [
+      "https://www.argentina.gob.ar/node/208806",
+      "https://www.argentina.gob.ar/node/461805"
+    ],
+    "provided_labels": {
+      "January": "hot",
+      "July": "cold"
+    },
+    "label_basis": "Evaluator-defined coarse profile for controlled context uptake; ambiguous national labels are task stipulations, not measured climatological truth."
+  },
+  "Singapore": {
+    "text": "Reference profile for Singapore. This is a simplified country-level classification for this task, not a description of every region. Typical daytime temperature category in January: hot. Typical daytime temperature category in July: hot.",
+    "source_urls": [
+      "https://www.weather.gov.sg/climate-climate-of-singapore/"
+    ],
+    "provided_labels": {
+      "January": "hot",
+      "July": "hot"
+    },
+    "label_basis": "Evaluator-defined coarse profile for controlled context uptake; ambiguous national labels are task stipulations, not measured climatological truth."
+  }
+}
