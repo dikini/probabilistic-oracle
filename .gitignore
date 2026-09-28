@@ -27,3 +27,6 @@ runs/
 .idea/
 .vscode/
 .DS_Store
+
+# Separate Laya runtime
+.venv-laya/
