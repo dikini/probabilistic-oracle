@@ -132,7 +132,7 @@ def report_saved(directory):
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,required=True);p.add_argument('--deadline');p.add_argument('--report-only',action='store_true');p.add_argument('--facts',action='store_true');p.add_argument('--baseline',type=Path);args=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,required=True);p.add_argument('--deadline');p.add_argument('--report-only',action='store_true');p.add_argument('--facts',action='store_true');p.add_argument('--baseline',type=Path);p.add_argument('--model-profile',choices=('qwen3-0.6b','qwen3-4b-awq'),default='qwen3-0.6b');args=p.parse_args()
     if args.report_only:
         report=report_saved(args.output);write(args.output/'report.json',report);print(json.dumps(report));return
     if not args.deadline:p.error('--deadline required')
@@ -140,6 +140,8 @@ def main():
     facts=json.loads((ROOT/'bench/cases/seasonal-facts.json').read_text()) if args.facts else None
     deadline=datetime.fromisoformat(args.deadline).timestamp();qs=queries(load_cases(),facts)
     protocol=(ROOT/'docs/plans/2026-09-28-seasonal-facts.md' if args.facts else PROTOCOL).read_text()
+    if args.model_profile != 'qwen3-0.6b':
+        protocol += '\n\n' + (ROOT/'docs/plans/2026-09-28-larger-seasonal.md').read_text()
     args.output.mkdir(parents=True,exist_ok=False)
     settings=dict(temperature=0,max_tokens=16,seed=0,structured_outputs=dict(choice=CHOICES))
     manifest=dict(queries=qs,query_sha256=digest(qs),protocol=protocol,protocol_sha256=digest(protocol),sampling=settings,
@@ -156,7 +158,7 @@ def main():
     from probabilistic_oracle.backends.vllm import VllmOracle
     from vllm import SamplingParams
     from vllm.sampling_params import StructuredOutputsParams
-    oracle=VllmOracle()
+    oracle=VllmOracle(profile=args.model_profile)
     params=SamplingParams(temperature=0,max_tokens=16,seed=0,structured_outputs=StructuredOutputsParams(choice=CHOICES))
     backend=dict(oracle.provenance,sampling=settings,prompt_template='seasonal-facts-v1' if args.facts else 'seasonal-knowledge-v1',
                  structured_output_config=asdict(oracle.llm.llm_engine.vllm_config.structured_outputs_config))
